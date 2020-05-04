@@ -1,3 +1,8 @@
+# **IMPORTANT**!!
+Check project ***README*** for instructions on how to change your `SECRET_KEY` keeping the default value is unsecure and not recommended
+
+----
+
 ## Configuring for deployment:
 
 Before deploying your application you must configure your database,
