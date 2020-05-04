@@ -46,3 +46,23 @@ $ . MyVirtualEnv/bin/activate
 * Install requirements on your environment: 
 ```
 $ pip install -r requirements.txt
+```
+
+### How To Use
+After completing the prerequisites section you can now start using the project, simply do the following:
+* Migrate in order to setup the custom user model, the authentication tokens, and the IoT models: 
+```
+$ ./manage.py migrate
+```
+* Create a super user by typing:
+```
+$ ./manage.py createsuperuser
+```
+and following the steps
+* Test the installation by running the server: 
+```
+$ ./manage.py runserver
+```
+
+After that you can access the `Admin` console via `localhost:8000/admin/` and start configurating your projects and their sensors.
+
