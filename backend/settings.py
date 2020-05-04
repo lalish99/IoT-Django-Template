@@ -21,7 +21,7 @@ SETTINGS_PATH = os.path.dirname(os.path.dirname(__file__))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '6t8i%h4dee3gnipi0(jaq713k+=9@awqme@e*j%au)g)z+-c9i'
+SECRET_KEY = '[#v-CgvQ})fwT6-It7Xjou<lysA{`ld9(>uAws=^yZ/fCjbc05k-It7Xjou<ly_aB>hc9i'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -34,6 +34,9 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'users.apps.UsersConfig',
+    'IoT.apps.IotConfig',
+    'django_extensions',
+    'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

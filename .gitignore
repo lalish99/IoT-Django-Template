@@ -14,3 +14,7 @@ __pycache__/
 
 # Database files
 *.sqlite3
+
+# Visual Studio Code
+.vscode/*
+.vscode
