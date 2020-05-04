@@ -47,7 +47,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
-    @action(detail=True, methods=["get", "post", "delete"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsProjectOwner,IoTPermissions.IsZoneOwner))
+    @action(detail=True, methods=["get", "post", "delete"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsProjectOwner))
     def project_zones(self, request, pk=None):
         """
         ## Manage project zones
@@ -61,10 +61,10 @@ class IoTProjectsViewSet(viewsets.ViewSet):
         * #### *POST*: Allows to add new zones to project
         * #### *DELETE*: Allows to delete project zones
 
-        *In order to create or delete zones you should send it within request body
+        *In order to create or delete zones you must send the information within request body
         in the argument "zones"*
         ##### Example:
-        *DELETE*:
+        **DELETE**:
         {
             zones: [
                 {
@@ -76,18 +76,20 @@ class IoTProjectsViewSet(viewsets.ViewSet):
             ]
         }
         
-        *POST*:
+        **POST**:
         {
             zones: [
                 {
                     name:"",
-                    description:"",
-                    id_project:#project_pk
+                    description:""
                 }
             ]
         }
         
-        *By default the token used on authentication will be registered to control
+        ### Notes:
+        * The url pk is used as the zone's project ID thus zones created will be linked
+        to the matching project
+        * *By default the token used on authentication will be registered to control
         the newly created zone*
         """
         ex = 'Unknown'
@@ -99,12 +101,21 @@ class IoTProjectsViewSet(viewsets.ViewSet):
         try:
             # Manage incoming post requests project_zones
             if request.method == "POST":
+                project = models.Projects.objects.get(pk=pk)
+                self.check_object_permissions(request, project)
                 zones = request.data['zones']
-                ser = serializers.ZonesSerializer(data=zones, many=True, context={'token':request.auth})
+                ser = serializers.ZonesSerializer(
+                    data=zones,
+                    many=True,
+                    context={
+                        'token':request.auth,
+                        'project':project
+                    }
+                )
                 if ser.is_valid():
                     ser.save()
                     return Response({
-                        'status':'Created zone{}'.format('s' if len(zones) > 1 else ''),
+                        'status':'Created zone{}'.format('s' if len(zones)>1 else ''),
                         'zones':ser.data
                     }, status=status.HTTP_201_CREATED)
                 else:
@@ -117,7 +128,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
             elif request.method == "DELETE":
                 deleted_zones = []
                 for zone in request.data['zones']:
-                    z = get_object_or_404(Zones,pk=zone['id_zone'])
+                    z = get_object_or_404(models.Zones,pk=zone['id_zone'])
                     self.check_object_permissions(request, z)
                     z.delete()
                     deleted_zones.append({'id_zone':zone['id_zone']})
@@ -149,6 +160,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
             'message':msg
         }, status=status.HTTP_400_BAD_REQUEST)
 
+
     @action(detail=True, methods=["get","put"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsZoneOwner,))
     def zone(self, request, pk=None):
         """
@@ -164,6 +176,15 @@ class IoTProjectsViewSet(viewsets.ViewSet):
         *In order to update a zone's information you should send it within request
         body in the argument "zone"*
         ##### Example:
+        
+        **PUT**:
+        {
+            zone:{
+                name:"",
+                description:"",
+                id_project:#project_pk
+            }
+        }
         """
         filtered_zone = models.Zones.objects.get(pk=pk)
         if not request.user.is_authenticated:
@@ -173,7 +194,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
 
         if request.method == 'PUT':
             zone_data = request.data['zone']
-            zone = get_object_or_404(Zones,pk=zone_data['id'])
+            zone = get_object_or_404(models.Zones,pk=zone_data['id'])
             print(zone)
             ser = serializers.ZonesSerializer(zone, data=zone_data, many=False, partial=True)
             if ser.is_valid():
@@ -200,6 +221,110 @@ class IoTProjectsViewSet(viewsets.ViewSet):
             'status':'Something went wrong',
         }, status=status.HTTP_400_BAD_REQUEST)
     
+
+    @action(detail=True, methods=["get", "post", "delete"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsZoneOwner))
+    def zone_sensors(self, request, pk=None):
+        """
+        ## Manage zone ambiental sensors
+        ====
+
+        #### Allowed methods:
+        * #### *GET*: Retrives all sensors of zone
+        *Sensors found will be returned in the zone_ambiental_sensors argument
+        within the body, remember that in order to acces non ambiental sensors
+        you must access them through their parent nodes*
+
+        * #### *POST*: Allows to add new ambiental sensors to zone
+        * #### *DELETE*: Allows to delete zone ambiental sensors
+
+        *In order to create or delete sensors you must send the information within request body
+        in the argument "sensors"*
+        ##### Example:
+        **DELETE**:
+        {
+            sensors: [
+                {
+                    id_sensor:#1
+                },
+                {
+                    id_sensor:#2
+                }
+            ]
+        }
+        
+        **POST**:
+        {
+            sensors: [
+                {
+                    id:"",
+                    ambiental:"",
+                    sensor_type:#project_pk
+                }
+            ]
+        }
+        
+        ### Notes:
+        * The url pk is used as the sensors's zone ID thus sensors created will be linked
+        to the matching zone
+        * *Sensor do not have acces keys, they are managed by the zone or node they
+        belong to*
+        """
+        ex = 'Unknown'
+        msg = ''
+        if not request.user.is_authenticated:
+            return Response({
+                'status':'Information not available',
+            }, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # Manage incomming post requests zone_sensors
+            if request.method == "POST":
+                zone = models.Zones.objects.get(pk=pk)
+                self.check_object_permissions(request, zone)
+                sensors = request.data['sensors']
+                ser = serializers.SensorsSerializer(
+                    data=sensors,
+                    many=True,
+                    context={
+                        'token':request.auth,
+                        'zone':zone
+                    }
+                )
+                if ser.is_valid():
+                    ser.save()
+                    return Response({
+                        'status':'Created sensor{}'.foramt('s' if len(sensors)>1 else ''),
+                        'sensors':ser.data
+                    }, status=status.HTTP_201_CREATED)
+                else:
+                    return Response({
+                        'status':'Error while creating sensor{}'.format('s' if len(sensors)>1 else ''),
+                        'errors':ser.errors,
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            # Manage incoming delete requests
+            elif request.method == "DELETE":
+                deletd_sensors = []
+                for sensor in request.data['sensors']
+                    s = get_object_or_404(models.Sensors,pk=sensor['id_sensor'])
+                    self.check_object_permissions(request, s)
+                    s.delete()
+                    deletd_sensors.append({'id_sensor':sensor['id_sensor']})
+                return Response({
+                    'status':'Sensor{} deletion succesfull'.format('s' if len(deletd_sensors) > 1 else ''),
+                    'deleted_sensors':deletd_sensors
+                },status=status.HTTP_200_OK)
+            # Manage incoming get requests
+            elif request.method == "GET":
+                zone = models.Zones.objects.get(pk=pk)
+                self.check_object_permissions(request, zone)
+                zone_ambiental_sensors = zone.zone_ambiental_sensors
+                ser = serializers.SensorsSerializer(zone_ambiental_sensors, many=True)
+                return Response({
+                    'status':'Search successful',
+                    'zone_ambiental_sensors':ser.data
+                })
+        return Response({
+            'status':'WIP'
+        }, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["get","post"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsNodeOwner,))
     def node(self, request, pk=None):
