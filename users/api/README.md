@@ -31,7 +31,7 @@ class SnippetViewSet(viewsets.ViewSet):
     """
     Example use of custom acces token as authentication class
     """
-    queryset = Snippet.objects.all()
+    queryset = YourModel.objects.all()
     serializer_class = YourSerializer
     authentication_classes = (BasicAuthentication,CAccessTokenRestAuth, )
     
