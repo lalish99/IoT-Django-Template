@@ -27,7 +27,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from users.api import CAccessTokenRestAuth
 
-class SnippetViewSet(viewsets.ViewSet):
+class YourModelViewSet(viewsets.ViewSet):
     """
     Example use of custom acces token as authentication class
     """
