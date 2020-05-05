@@ -67,3 +67,10 @@ $ ./manage.py runserver
 
 After that you can access the `Admin` console via `localhost:8000/admin/` and start configurating your projects and their sensors.
 
+### **IMPORTANT!**
+Don't forget to migrate your database everytime you pull updates:
+```
+$ git pull
+$ ./manage.py migrate
+```
+With this you ensure the project works correctly
