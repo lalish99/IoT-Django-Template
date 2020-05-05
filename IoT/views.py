@@ -70,7 +70,7 @@ def graph(request, project_id, sensor_id, measurement_type):
     values, dates = zip(*measurements)
     f, ax = plt.subplots(figsize=(10,10))
     ax.plot(dates, values)
-    ax.set_title(choices.MEASUREMENT_TYPE_CHOICES[measurement_type])
+    # ax.set_title(choices.MEASUREMENT_TYPE_CHOICES[measurement_type])
     f.autofmt_xdate()
     # Byte information
     buf = io.BytesIO()
