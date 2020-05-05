@@ -23,6 +23,7 @@ class located in `users.api.cauth.py`
 
 For example:
 ```python
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from users.api import CAccessTokenRestAuth
 
@@ -33,5 +34,9 @@ class SnippetViewSet(viewsets.ViewSet):
     queryset = Snippet.objects.all()
     serializer_class = YourSerializer
     authentication_classes = (BasicAuthentication,CAccessTokenRestAuth, )
-    # ...
+    
+    @action(detail=False, methods=['get',])
+    def yourView(self, request):
+        # ...
+        pass
 ```
