@@ -12,7 +12,7 @@ class Projects(models.Model):
     description = models.TextField()
     
     snippet_title = models.CharField(max_length=30)
-    snippet_image = models.CharField(max_length=30)
+    snippet_image = models.TextField()
 
     user = models.ForeignKey(
         GeneralUser,
