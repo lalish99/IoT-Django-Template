@@ -40,6 +40,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
                 'status':'Information not available',
             }, status=status.HTTP_400_BAD_REQUEST)
         projects = request.user.user_iot_projects
+        # Add validation on token authorization per project
         try:
             serialized_projects = serializers.NestedProjectsSerializer(projects, many=True)
             return Response({

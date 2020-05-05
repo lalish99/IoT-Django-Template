@@ -42,7 +42,7 @@ class IsZoneOwner(permissions.BasePermission):
         A zone is expected as the obj
         ====
         """
-        if request.user.is_superuser:
+        if request.user.is_superuser and request.auth is None:
             return True
         if isinstance(obj, models.Zones):
             token = request.auth
@@ -66,7 +66,7 @@ class IsNodeOwner(permissions.BasePermission):
         A node is expected as the obj
         ====
         """
-        if request.user.is_superuser:
+        if request.user.is_superuser and request.auth is None:
             return True
         if isinstance(obj, models.Node):
             token = request.auth
@@ -87,7 +87,7 @@ class CanManageSensor(permissions.BasePermission):
         A sensor is expected as the obj
         ====
         """
-        if request.user.is_superuser:
+        if request.user.is_superuser and request.auth is None:
             return True
         if isinstance(obj, models.Sensors):
             allowed_sensors = set()
