@@ -12,7 +12,7 @@ SENSOR_TYPE_CHOICES = [
     (DHT22,'Multisensor DHT22'),
     (MCP9701A,'Temperature sensor MCP9701A'),
     (LDR,'Photoresistor'),
-    (BME280,'Pressure temperature altitude sensor BME280'),
+    (BME280,'Pressure temperature humidity sensor BME280'),
     (BMP180,'Pressure temperature altitude sensor BMP180'),
     (SM150,'Moisture sensor'),
     (CMS,'Cable moisture sensor'),
