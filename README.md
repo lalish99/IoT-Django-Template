@@ -27,8 +27,9 @@ Just remember to create your virtualenv first, check the *Prerequisites* section
 
 ### Features
 * Custom User Model
-* Ready to use IoT basic data recolection and management from multiple data sources
-* Ready to use and customizable plot views
+* Custom Acces Tokens for secure authentication and delegation of read/write tasks (see `users.api.README` for more information)
+* Ready to use IoT basic data recolection and management from multiple data sources (see `IoT.api.README` for more information)
+* Ready to use and customizable plot views (see `IoT.README` for more information)
 * Lean deployement on AWS Bean Stalk
 * Static files and Database configured for local development and remote deployment
 

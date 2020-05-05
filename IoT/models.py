@@ -10,8 +10,7 @@ class Projects(models.Model):
     """
     name = models.CharField(max_length=20)
     description = models.TextField()
-
-    url_name = models.CharField(max_length=20)
+    
     snippet_title = models.CharField(max_length=30)
     snippet_image = models.CharField(max_length=30)
 
