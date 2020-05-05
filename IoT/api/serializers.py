@@ -2,6 +2,7 @@ from rest_framework.exceptions import ParseError
 from django.shortcuts import get_object_or_404
 from rest_framework import routers, serializers, viewsets
 from IoT.models import Projects, Zones, Node, Sensors, Measurement
+from users.models import CustomAccessTokens
 
 """
 Single class serializers
@@ -19,19 +20,22 @@ class ZonesSerializer(serializers.ModelSerializer):
     """
     Serializer for Zones model
     """
-    id_project = serializers.IntegerField(source="project.id", read_only=False)
+    id_project = serializers.IntegerField(source="project.id", read_only=False, required=False)
     class Meta:
         model = Zones
         fields = ('id', 'name', 'description', 'id_project')
     
     def create(self, validated_data):
-        if 'project' not in validated_data:
-            raise ParseError(detail='Project missing in validated data', code=404)
-        project = validated_data.pop('project')
-        if 'id' not in project:
-            raise ParseError(detail='Project id missing', code=404)
-        project = get_object_or_404(Projects,pk=project['id'])
+        if 'project' not in self.context:
+            raise ParseError(detail='Project missing in context', code=404)
+        project = self.context['project']
         zone = Zones(project=project, **validated_data)
+        if 'token' in self.context and isinstance(self.context['token'], CustomAccessTokens):
+            token = self.context['token']
+            try:
+                zone.access_keys.add(token)
+            except Exception as e:
+                print(e)
         zone.save()
         return zone
 
@@ -55,6 +59,13 @@ class SensorsSerializer(serializers.ModelSerializer):
         model = Sensors
         fields = ('id', 'ambiental', 'sensor_type', 'id_node')
 
+    def create(self, validated_data):
+        if 'zone' not in self.context:
+            raise ParseError(detail='Zone missing in context', code=404)
+        zone = self.context['zone']
+        sensor = Sensor(zone=zone, **validated_data)
+        sensor.save()
+        return sensor
 
 class MeasurementSerializer(serializers.ModelSerializer):
     """

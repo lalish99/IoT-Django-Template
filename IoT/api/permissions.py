@@ -23,6 +23,8 @@ class IsProjectOwner(permissions.BasePermission):
                 if obj in request.user.user_iot_projects.all():
                     return True
             return False
+        elif isinstance(obj, models.Node):
+            return IsNodeOwner().has_object_permission(request,view,obj)
         elif isinstance(obj, models.Zones):
             return IsZoneOwner().has_object_permission(request,view,obj)
         raise exceptions.PermissionDenied(detail={'ERROR':'No project detected'}, code=403)
@@ -47,6 +49,8 @@ class IsZoneOwner(permissions.BasePermission):
             if obj in token.token_iot_zones.all():
                 return True
             return False
+        elif isinstance(obj, models.Sensors):
+            return CanManageSensor().has_object_permission(request,view,obj)
         raise exceptions.PermissionDenied(detail={'ERROR':'No zone detected'}, code=403)
 
 
@@ -62,6 +66,8 @@ class IsNodeOwner(permissions.BasePermission):
         A node is expected as the obj
         ====
         """
+        if request.user.is_superuser:
+            return True
         if isinstance(obj, models.Node):
             token = request.auth
             if obj in token.token_iot_nodes.all():
@@ -81,6 +87,8 @@ class CanManageSensor(permissions.BasePermission):
         A sensor is expected as the obj
         ====
         """
+        if request.user.is_superuser:
+            return True
         if isinstance(obj, models.Sensors):
             allowed_sensors = set()
             for p in request.user.user_iot_projects.all():
