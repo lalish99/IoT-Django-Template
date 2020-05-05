@@ -5,6 +5,7 @@ from rest_framework.decorators import action, api_view
 from rest_framework.authentication import  BasicAuthentication
 from users.api.cauth import CAccessTokenRestAuth
 from users.models import GeneralUser
+from django.http import Http404
 import IoT.api.serializers as serializers
 import IoT.models as models
 import IoT.api.permissions as IoTPermissions
@@ -16,10 +17,16 @@ class IoTProjectsViewSet(viewsets.ViewSet):
     """
     authentication_classes = (BasicAuthentication,CAccessTokenRestAuth, )
 
-    @action(detail=True, methods=["get"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsProjectOwner,))
-    def projects(self, request, pk=None):
+    """
+    ============
+    Projects
+    ============
+    """
+
+    @action(detail=False, methods=["get"], permission_classes=(permissions.IsAuthenticated,))
+    def projects(self, request):
         """
-        ## Obtain project information
+        ## Obtain all user's projects
         ====
 
         #### Projects can't be created within the API they most be created from within the
@@ -32,8 +39,37 @@ class IoTProjectsViewSet(viewsets.ViewSet):
             return Response({
                 'status':'Information not available',
             }, status=status.HTTP_400_BAD_REQUEST)
+        projects = request.user.user_iot_projects
+        try:
+            serialized_projects = serializers.NestedProjectsSerializer(projects, many=True)
+            return Response({
+                'status':'Information shown',
+                'projects':serialized_projects.data, 
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            return Response({
+                'status':'Something went wrong',
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=["get"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsProjectOwner,))
+    def project(self, request, pk=None):
+        """
+        ## Obtain project information
+        ====
+
+        #### Projects can't be created within the API they most be created from within the
+        admin console.
+
+        #### Allowed methods:
+        * #### *GET*: View details of project
+        """
+        if not request.user.is_authenticated:
+            return Response({
+                'status':'Information not available',
+            }, status=status.HTTP_400_BAD_REQUEST)
         # Validate url id and ownership of project
-        project = models.Projects.objects.get(pk=pk)
+        project = get_object_or_404(models.Projects, pk=pk)
         self.check_object_permissions(request, project)
         try:
             serialized_projects = serializers.NestedProjectsSerializer(project, many=False)
@@ -161,6 +197,12 @@ class IoTProjectsViewSet(viewsets.ViewSet):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
+    """
+    ============
+    Zone
+    ============
+    """
+
     @action(detail=True, methods=["get","put"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsZoneOwner,))
     def zone(self, request, pk=None):
         """
@@ -222,7 +264,57 @@ class IoTProjectsViewSet(viewsets.ViewSet):
         }, status=status.HTTP_400_BAD_REQUEST)
     
 
-    @action(detail=True, methods=["get", "post", "delete"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsZoneOwner))
+    @action(detail=True, methods=["get","post","delete"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsZoneOwner))
+    def zone_nodes(self, request, pk=None):
+        """
+        ## Manage zone nodes
+        ====
+
+        #### Allowed methods:
+        * #### *GET*: Retrives all nodes of zone
+        *Nodes found will be returned in the zone_nodes argument
+        within the body*
+
+        * #### *POST*: Allows to add new nodes to zone
+        * #### *DELETE*: Allows to delete zone nodes
+
+        *In order to create or delete nodes you must send the information within request body
+        in the argument "nodes"*
+        ##### Example:
+        **DELETE**:
+        {
+            nodes: [
+                {
+                    id_node:#1
+                },
+                {
+                    id_node:#2
+                }
+            ]
+        }
+        
+        **POST**:
+        {
+            nodes: [
+                {
+                    name:"",
+                    description:"",
+                }
+            ]
+        }
+        
+        ### Notes:
+        * The url pk is used as the node's zone ID thus nodes created will be linked
+        to the matching zone
+        * *By default the token used on authentication will be registered to control
+        the newly created node*
+        """
+        return Response({
+            'status':'WIP'
+        }, status=status.HTTP_200_OK)
+
+
+    @action(detail=True, methods=["get","post","delete"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsZoneOwner))
     def zone_sensors(self, request, pk=None):
         """
         ## Manage zone ambiental sensors
@@ -231,7 +323,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
         #### Allowed methods:
         * #### *GET*: Retrives all sensors of zone
         *Sensors found will be returned in the zone_ambiental_sensors argument
-        within the body, remember that in order to acces non ambiental sensors
+        within the body, remember that in order to access non ambiental sensors
         you must access them through their parent nodes*
 
         * #### *POST*: Allows to add new ambiental sensors to zone
@@ -258,7 +350,6 @@ class IoTProjectsViewSet(viewsets.ViewSet):
                 {
                     id:"",
                     ambiental:"",
-                    sensor_type:#project_pk
                 }
             ]
         }
@@ -303,7 +394,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
             # Manage incoming delete requests
             elif request.method == "DELETE":
                 deletd_sensors = []
-                for sensor in request.data['sensors']
+                for sensor in request.data['sensors']:
                     s = get_object_or_404(models.Sensors,pk=sensor['id_sensor'])
                     self.check_object_permissions(request, s)
                     s.delete()
@@ -322,9 +413,23 @@ class IoTProjectsViewSet(viewsets.ViewSet):
                     'status':'Search successful',
                     'zone_ambiental_sensors':ser.data
                 })
+        except KeyError as e:
+            ex = 'KeyError'
+            msg = 'If your request is POST or DELETE verify you are sending the sensors you want to either create or delete'
+        except Exception as e:
+            ex = str(e)
+            msg = ''
         return Response({
-            'status':'WIP'
-        }, status=status.HTTP_200_OK)
+            'status':'Something went wrong',
+            'exception':ex,
+            'message':msg
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    """
+    ============
+    Nodes
+    ============
+    """
 
     @action(detail=True, methods=["get","post"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsNodeOwner,))
     def node(self, request, pk=None):
@@ -341,7 +446,12 @@ class IoTProjectsViewSet(viewsets.ViewSet):
         return Response({
             'status':'Information shown',
         }, status=status.HTTP_200_OK)
-    
+
+    """
+    ============
+    Measurements
+    ============
+    """    
 
     @action(detail=False, methods=["post",], permission_classes=(permissions.IsAuthenticated,IoTPermissions.CanManageSensor,))
     def measure(self, request):

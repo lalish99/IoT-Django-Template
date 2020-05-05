@@ -23,6 +23,8 @@ class IsProjectOwner(permissions.BasePermission):
                 if obj in request.user.user_iot_projects.all():
                     return True
             return False
+        elif isinstance(obj, models.Node):
+            return IsNodeOwner().has_object_permission(request,view,obj)
         elif isinstance(obj, models.Zones):
             return IsZoneOwner().has_object_permission(request,view,obj)
         raise exceptions.PermissionDenied(detail={'ERROR':'No project detected'}, code=403)
