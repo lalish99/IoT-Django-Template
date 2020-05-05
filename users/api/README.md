@@ -17,5 +17,26 @@ the existing token and create a new one
 
 ----
 ## Adding Custom Token as authentication method:
-If you want to add the `Acces Token` as your authentication method in any of the `django-rest` 
-views you can include and use the `CAccessTokenRestAuth` class located in `users.api.cauth.py` 
+If you create a new view for your api and want to add the `Acces Token` as your authentication 
+method in any of the `django-rest` views you can include and use the `CAccessTokenRestAuth` 
+class located in `users.api.cauth.py`
+
+For example:
+```python
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from users.api import CAccessTokenRestAuth
+
+class YourModelViewSet(viewsets.ViewSet):
+    """
+    Example use of custom acces token as authentication class
+    """
+    queryset = YourModel.objects.all()
+    serializer_class = YourSerializer
+    authentication_classes = (BasicAuthentication,CAccessTokenRestAuth, )
+    
+    @action(detail=False, methods=['get',])
+    def yourView(self, request):
+        # ...
+        pass
+```
