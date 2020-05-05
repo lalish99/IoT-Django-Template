@@ -36,7 +36,7 @@ All models can have multiple acces tokens, allowing managment of read and write 
         * **If the time does not match your current timezone please change the `TIME_ZONE` parameter inside `backend.settings.py`**
 
 ### Models relationship:
-![Model Relationship](https://mindmup-export.s3.amazonaws.com/map.png/out/ad5450808e8511ea8b9065e7a71d3811.map.png?AWSAccessKeyId=ASIASNCK5ADRYXXVF6KF&Expires=1588745137&Signature=i65i1ZYCoRxZ2FHpCJnFlxcXqTQ%3D&x-amz-security-token=IQoJb3JpZ2luX2VjEEwaCXVzLWVhc3QtMSJHMEUCIQCmbSR3BxsfPC9Z8DQC9Ftd2JjhiXTkePP1YnYpGdhWEAIgWnhKRLj1DIKr0WNjOjNN66iVyR%2FAYgp6JetldIe7G28q2AEIhf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgwxNjU1MTMzMzA5MTUiDONYmvhxMjWO5E%2BRrCqsARa%2Fr1wKVsqIxUVe30BkYbWAWH16YCRDYvkjL0WXabrVLT9PRTUZebSuD4uzkhv2DSW4OXw0ZFidrqRAIVK9BSgSfhw5OoHKtz1ron4ZQ6VxVilLuzcTea6PDTlnGdUJDFrQT771POrBkAOKEvEf521Lsc%2Bp%2FAqEWy6kaK8MVKZMM5nwq%2Fb6KZ2ZIHxSXj%2BcR1uxEH8bKrk93N8AgWr7qWQT8vwUgJ%2FMds5p1eQw6MfD9QU64AF9HqgS7O5qtMfqTzDkWW1ftl0NgYFszGTBhdw7DlTwhAHOoKwgc0dDMUSM4DfWv7duvjWFyZT5Fx1z7GPequp%2FUNn7dY9gPshhtuu0OsmGxMdjyT1u3U6YziyhBAwErR5amm1RCVo%2F%2BwVNhd5HghsHiuc2m9RR0ELfbL4aWE%2FZuMz9dk5VnJWaoJIyb%2F0vYnC0wA5dhz8BKrBIAwGcadiTg3MrGscWjk7Q9oD73YEeZELmxuW6ZKMa3vRUiR4ueIpRiMsFRejhOh76ATxYAMLKgyT%2By%2BD%2B2SmRbufEhM9XDQ%3D%3D)
+![Model Relationship](template_models.png)
 * A user can have **N** tokens which might belong to **N** Projects, Zones or Nodes.
 * Each Project can have **N** Zones
 * Each Zone can have **N** Nodes & **N** Ambiental Sensors
