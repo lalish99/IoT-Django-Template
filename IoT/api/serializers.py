@@ -79,7 +79,10 @@ class SensorsSerializer(serializers.ModelSerializer):
         if 'zone' not in self.context:
             raise ParseError(detail='Zone missing in context', code=404)
         zone = self.context['zone']
-        sensor = Sensor(zone=zone, **validated_data)
+        sensor = Sensors(zone=zone, **validated_data)
+        if 'node' in self.context:
+            node = self.context['node']
+            sensor.node = node
         sensor.save()
         return sensor
 

@@ -166,8 +166,6 @@ class IoTProjectsViewSet(viewsets.ViewSet):
                 deleted_zones = []
                 for zone in request.data['zones']:
                     z = get_object_or_404(models.Zones,pk=zone['id_zone'])
-                    print(z.access_keys)
-                    print(self.check_object_permissions(request, z))
                     z.delete()
                     deleted_zones.append({'id_zone':zone['id_zone']})
                 return Response({
@@ -209,10 +207,10 @@ class IoTProjectsViewSet(viewsets.ViewSet):
     @action(detail=True, methods=["get","put","delete"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsZoneOwner,))
     def zone(self, request, pk=None):
         """
-        ## Manage zones
+        ## Manages a specific zone
         ====
 
-        #### Zones might be created and edited by zone owners
+        #### Zones might be created, edited, and deleted by zone owners
 
         #### Allowed methods:
         * #### *GET*: View zone information
@@ -220,7 +218,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
         * #### *DELETE*: Delete the zone
 
         *If you have have control over the current zone by using the DELETE 
-        method you automatically delete it*
+        method you automatically delete it **BE CAREFUL** !*
 
         *In order to update a zone's information you should send it within request
         body in the argument "zone"*
@@ -248,7 +246,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
                 return Response({
                     'status':'Zone updated correctly',
                     'zone_info':ser.data,
-                },status=status.HTTP_200_CREATED)
+                },status=status.HTTP_200_OK)
             else:
                 return Response({
                     'status':'Error while updating',
@@ -331,7 +329,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
         try:
             # Manage incoming post requests
             if request.method == "POST":
-                zone = get_object_or_404(mdoels.Zones,pk=pk)
+                zone = get_object_or_404(models.Zones,pk=pk)
                 self.check_object_permissions(request,zone)
                 nodes = request.data['nodes']
                 ser = serializers.NodeSerializer(
@@ -367,7 +365,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
                 }, status=status.HTTP_200_OK)
             # Manage incoming get requests
             elif request.method == "GET":
-                zone = get_object_or_404(mdoels.Zones,pk=pk)
+                zone = get_object_or_404(models.Zones,pk=pk)
                 self.check_object_permissions(request, zone)
                 zone_nodes = zone.zone_nodes
                 ser = serializers.NodeSerializer(zone_nodes, many=True)
@@ -443,9 +441,11 @@ class IoTProjectsViewSet(viewsets.ViewSet):
         try:
             # Manage incoming post requests zone_sensors
             if request.method == "POST":
-                zone = get_object_or_404(mdoels.Zones,pk=pk)
+                zone = get_object_or_404(models.Zones,pk=pk)
                 self.check_object_permissions(request, zone)
                 sensors = request.data['sensors']
+                for sensor in sensors:
+                    sensor['ambiental'] = True
                 ser = serializers.SensorsSerializer(
                     data=sensors,
                     many=True,
@@ -457,7 +457,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
                 if ser.is_valid():
                     ser.save()
                     return Response({
-                        'status':'Created sensor{}'.foramt('s' if len(sensors)>1 else ''),
+                        'status':'Created sensor{}'.format('s' if len(sensors)>1 else ''),
                         'sensors':ser.data
                     }, status=status.HTTP_201_CREATED)
                 else:
@@ -479,7 +479,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
                 },status=status.HTTP_200_OK)
             # Manage incoming get requests
             elif request.method == "GET":
-                zone = get_object_or_404(mdoels.Zones,pk=pk)
+                zone = get_object_or_404(models.Zones,pk=pk)
                 self.check_object_permissions(request, zone)
                 zone_ambiental_sensors = zone.zone_ambiental_sensors
                 ser = serializers.SensorsSerializer(zone_ambiental_sensors, many=True)
@@ -505,9 +505,35 @@ class IoTProjectsViewSet(viewsets.ViewSet):
     ============
     """
 
-    @action(detail=True, methods=["get","post"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsNodeOwner,))
+    @action(detail=True, methods=["get","put","delete"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsNodeOwner,))
     def node(self, request, pk=None):
-        if request.method == 'POST':
+        """
+        ## Manage a specific node
+        ====
+
+        #### Nodes might be created, edited and deleted by node owners
+
+        #### Allowed methods:
+        * #### *GET*: View node information
+        * #### *PUT*: Edit node basic information
+        * #### *DELETE*: Delete the node
+
+        *If you have have control over the current node by using the DELETE 
+        method you automatically delete it **BE CAREFUL** !*
+
+        *In order to update a node's information you should send it within request
+        body in the argument "node"*
+        ##### Example:
+        
+        **PUT**:
+        {
+            zone:{
+                name:"",
+                description:""
+            }
+        }
+        """
+        if request.method == 'PUT':
             pass
         elif request.method == 'GET':
             filtered_node = get_object_or_404(models.Node,pk=pk)
@@ -576,7 +602,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
         try:
             # Manage incoming post requests zone_sensors
             if request.method == "POST":
-                node = get_object_or_404(mdoels.Node,pk=pk)
+                node = get_object_or_404(models.Node,pk=pk)
                 self.check_object_permissions(request, node)
                 sensors = request.data['sensors']
                 ser = serializers.SensorsSerializer(
@@ -591,7 +617,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
                 if ser.is_valid():
                     ser.save()
                     return Response({
-                        'status':'Created sensor{}'.foramt('s' if len(sensors)>1 else ''),
+                        'status':'Created sensor{}'.format('s' if len(sensors)>1 else ''),
                         'sensors':ser.data
                     }, status=status.HTTP_201_CREATED)
                 else:
@@ -613,7 +639,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
                 },status=status.HTTP_200_OK)
             # Manage incoming get requests
             elif request.method == "GET":
-                node = get_object_or_404(mdoels.Node,pk=pk)
+                node = get_object_or_404(models.Node,pk=pk)
                 self.check_object_permissions(request, node)
                 node_sensors = zone.node_sensors
                 ser = serializers.SensorsSerializer(node_sensors, many=True)
