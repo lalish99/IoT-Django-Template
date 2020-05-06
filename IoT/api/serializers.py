@@ -30,6 +30,7 @@ class ZonesSerializer(serializers.ModelSerializer):
             raise ParseError(detail='Project missing in context', code=404)
         project = self.context['project']
         zone = Zones(project=project, **validated_data)
+        zone.save()
         if 'token' in self.context and isinstance(self.context['token'], CustomAccessTokens):
             token = self.context['token']
             try:
@@ -48,6 +49,21 @@ class NodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Node
         fields = ('id', 'name', 'description', 'id_zone')
+
+    def create(self, validated_data):
+        if 'zone' not in self.context:
+            raise ParseError(detail='Zone missing in context', code=404)
+        zone = self.context['zone']
+        node = Node(zone=zone, **validated_data)
+        node.save()
+        if 'token' in self.context and isinstance(self.context['token'], CustomAccessTokens):
+            token = self.context['token']
+            try:
+                node.access_keys.add(token)
+            except Exception as e:
+                print(e)
+        node.save()
+        return node
 
 
 class SensorsSerializer(serializers.ModelSerializer):
