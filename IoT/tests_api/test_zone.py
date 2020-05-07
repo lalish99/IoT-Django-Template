@@ -146,6 +146,56 @@ class ZoneManagementTestCase(TestCase):
         self.assertEqual(number_zones, len(models.Zones.objects.all()))
 
 
+    def test_create_get_delete_zone(self):
+        """
+        Create a zone, get it and delete it
+        """
+        # Validate we have project id
+        self.assertNotEqual(self.project_id, None)
+        # Count number of zones
+        number_zones = len(models.Zones.objects.all())
+        # Create url
+        url_project_zones = reverse('iot_api:iot_general_api-project-zones', args=(self.project_id,))
+        # Create headers
+        header = {'HTTP_CA_TOKEN': self.project_token}
+        # Post data
+        zone_data = {
+            "zones":[
+                {
+                    "name":"Test Zone 1",
+                    "description":"First test zone created from api"
+                }
+            ]
+        }
+        post_response = self.client_api.post(
+            url_project_zones,
+            zone_data,
+            format='json',
+            **header
+            )
+        self.assertEqual(post_response.status_code, 201) # New Zone created
+        zone_id = post_response.data['zones'][0]['id'] # Save newly created id
+        created_zone = post_response.data['zones'][0]
+        # Get zone
+        url_zone = reverse('iot_api:iot_general_api-zone', args=(zone_id,))
+        get_response = self.client_api.get(
+            url_zone,
+            format='json',
+            **header
+        )
+        self.assertEqual(get_response.status_code, 200) # Information retrived
+        self.assertEqual(get_response.data['zone'], created_zone)
+        # Delete zone
+        delete_response = self.client_api.delete(
+            url_zone,
+            format='json',
+            **header
+        )
+        self.assertEqual(delete_response.status_code, 200) # Zone deleted
+        self.assertEqual(number_zones, len(models.Zones.objects.all()))
+
+
+
     def test_create_delete_node(self):
         # Create User
         user = GeneralUser.objects.create_user(
@@ -217,7 +267,7 @@ class ZoneManagementTestCase(TestCase):
         user.delete()
 
 
-    def test_create_delete_node(self):
+    def test_create_delete_sensor(self):
         # Create User
         user = GeneralUser.objects.create_user(
             username = 'TestUser2',

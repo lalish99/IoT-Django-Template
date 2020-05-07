@@ -23,24 +23,21 @@ class IoTProjectsViewSet(viewsets.ViewSet):
     ============
     """
 
-    @action(detail=False, methods=["get"], permission_classes=(permissions.IsAuthenticated,))
+    @action(detail=False, methods=["get","post"], permission_classes=(permissions.IsAuthenticated,))
     def projects(self, request):
         """
         ## Obtain all user's projects
         ====
 
-        #### Projects can't be created within the API they most be created from within the
-        admin console.
-
         #### Allowed methods:
         * #### *GET*: View projects vinculated to user
+        * #### *POST*: Create a project
         """
         if not request.user.is_authenticated:
             return Response({
                 'status':'Information not available',
             }, status=status.HTTP_400_BAD_REQUEST)
         projects = request.user.user_iot_projects
-        # Add validation on token authorization per project
         try:
             serialized_projects = serializers.NestedProjectsSerializer(projects, many=True)
             return Response({
@@ -237,38 +234,53 @@ class IoTProjectsViewSet(viewsets.ViewSet):
                 'status':'Information not available',
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        if request.method == 'PUT':
-            zone_data = request.data['zone']
-            zone = get_object_or_404(models.Zones,pk=pk)
-            ser = serializers.ZonesSerializer(zone, data=zone_data, many=False, partial=True)
-            if ser.is_valid():
-                ser.save()
-                return Response({
-                    'status':'Zone updated correctly',
-                    'zone_info':ser.data,
-                },status=status.HTTP_200_OK)
-            else:
-                return Response({
-                    'status':'Error while updating',
-                    'errors':ser.errors,
-                },status=status.HTTP_400_BAD_REQUEST)
+        ex = 'Unknown'
+        msg = ''
+        try:
+            if request.method == 'PUT':
+                zone_data = request.data['zone']
+                zone = get_object_or_404(models.Zones,pk=pk)
+                self.check_object_permissions(request, zone)
+                ser = serializers.ZonesSerializer(zone, data=zone_data, many=False, partial=True)
+                if ser.is_valid():
+                    ser.save()
+                    return Response({
+                        'status':'Zone updated correctly',
+                        'zone_info':ser.data,
+                    },status=status.HTTP_200_OK)
+                else:
+                    return Response({
+                        'status':'Error while updating',
+                        'errors':ser.errors,
+                    },status=status.HTTP_400_BAD_REQUEST)
 
-        elif request.method == 'DELETE':
-            filtered_zone = get_object_or_404(models.Zones,pk=pk)
-            self.check_object_permissions(request, filtered_zone)
-            filtered_zone.delete()
-            return Response({
-                'status':'Zone deletion successful'
-            }, status=status.HTTP_200_OK)
+            elif request.method == 'DELETE':
+                filtered_zone = get_object_or_404(models.Zones,pk=pk)
+                self.check_object_permissions(request, filtered_zone)
+                filtered_zone.delete()
+                return Response({
+                    'status':'Zone deletion successful'
+                }, status=status.HTTP_200_OK)
 
-        elif request.method == 'GET':
-            filtered_zone = get_object_or_404(models.Zones,pk=pk)
-            self.check_object_permissions(request, filtered_zone)
-            ser = serializers.ZonesSerializer(filtered_zone, many=False)
-            return Response({
-                'status':'Search successful',
-                'zone':ser.data
-            })
+            elif request.method == 'GET':
+                filtered_zone = get_object_or_404(models.Zones,pk=pk)
+                self.check_object_permissions(request, filtered_zone)
+                ser = serializers.ZonesSerializer(filtered_zone, many=False)
+                return Response({
+                    'status':'Search successful',
+                    'zone':ser.data
+                })
+        except KeyError as e:
+            ex = 'KeyError'
+            msg = 'If your request is POST or DELETE verify you are sending the sensors you want to either create or delete'
+        except Exception as e:
+            ex = str(e)
+            msg = ''
+        return Response({
+            'status':'Something went wrong',
+            'exception':ex,
+            'message':msg
+        }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
             'status':'Something went wrong',
@@ -527,28 +539,67 @@ class IoTProjectsViewSet(viewsets.ViewSet):
         
         **PUT**:
         {
-            zone:{
+            node:{
                 name:"",
                 description:""
             }
         }
         """
-        if request.method == 'PUT':
-            pass
-        elif request.method == 'GET':
-            filtered_node = get_object_or_404(models.Node,pk=pk)
-            self.check_object_permissions(request, filtered_node)
-            ser = serializers.NodeSerializer(filtered_node, many=True)
+        if not request.user.is_authenticated:
             return Response({
-                'status':'Search successful',
-                'nodes':ser.data
-            }, status=status.HTTP_200_OK)
+                'status':'Information not available',
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        ex = 'Unknown'
+        msg = ''
+        try:
+            if request.method == 'PUT':
+                node_data = request.data['node']
+                node = get_object_or_404(models.Node,pk=pk)
+                self.check_object_permissions(request, node)
+                ser = serializers.NodeSerializer(node, data=node_data, many=False, partial=True)
+                if ser.is_valid():
+                    ser.save()
+                    return Response({
+                        'status':'Node updated correctly',
+                        'node_info':ser.data,
+                    },status=status.HTTP_200_OK)
+                else:
+                    return Response({
+                        'status':'Error while updating',
+                        'errors':ser.errors,
+                    },status=status.HTTP_400_BAD_REQUEST)
+
+            elif request.method == 'DELETE':
+                filtered_node = get_object_or_404(models.Node,pk=pk)
+                self.check_object_permissions(request, filtered_node)
+                filtered_node.delete()
+                return Response({
+                    'status':'Zone deletion successful'
+                }, status=status.HTTP_200_OK)
+
+            elif request.method == 'GET':
+                filtered_node = get_object_or_404(models.Node,pk=pk)
+                self.check_object_permissions(request, filtered_node)
+                ser = serializers.NodeSerializer(filtered_node, many=False)
+                return Response({
+                    'status':'Search successful',
+                    'node':ser.data
+                }, status=status.HTTP_200_OK)
+        except KeyError as e:
+            ex = 'KeyError'
+            msg = 'If your request is POST or DELETE verify you are sending the sensors you want to either create or delete'
+        except Exception as e:
+            ex = str(e)
+            msg = ''
         return Response({
-            'status':'Information shown',
-        }, status=status.HTTP_200_OK)
+            'status':'Something went wrong',
+            'exception':ex,
+            'message':msg
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
-    @action(detail=True, methods=['get','post','put'], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsNodeOwner,))
+    @action(detail=True, methods=['get','post',"delete"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsNodeOwner,))
     def node_sensors(self, request, pk=None):
         """
         ## Manage node sensors
@@ -600,11 +651,13 @@ class IoTProjectsViewSet(viewsets.ViewSet):
                 'status':'Information not available',
             }, status=status.HTTP_400_BAD_REQUEST)
         try:
-            # Manage incoming post requests zone_sensors
+            # Manage incoming post requests node_sensors
             if request.method == "POST":
                 node = get_object_or_404(models.Node,pk=pk)
                 self.check_object_permissions(request, node)
                 sensors = request.data['sensors']
+                for sensor in sensors:
+                    sensor['ambiental'] = False
                 ser = serializers.SensorsSerializer(
                     data=sensors,
                     many=True,
@@ -641,7 +694,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
             elif request.method == "GET":
                 node = get_object_or_404(models.Node,pk=pk)
                 self.check_object_permissions(request, node)
-                node_sensors = zone.node_sensors
+                node_sensors = node.node_sensors
                 ser = serializers.SensorsSerializer(node_sensors, many=True)
                 return Response({
                     'status':'Search successful',
@@ -658,6 +711,16 @@ class IoTProjectsViewSet(viewsets.ViewSet):
             'exception':ex,
             'message':msg
         }, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    """
+    ============
+    Sensors
+    ============
+    """
+    # WIP
+
+    
     """
     ============
     Measurements
@@ -678,7 +741,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
                 s_serializer.save()
                 return Response({
                     'status':'Information shown',
-                    'received':s_serializer.data
+                    'measurements':s_serializer.data
                 }, status=status.HTTP_200_OK)
             else:
                 return Response({
