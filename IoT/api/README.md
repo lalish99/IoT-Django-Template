@@ -39,14 +39,12 @@ url: `IoT/api/g/measure/`
     ]
 }
 ```
-#### HTTPie Test
-By default, **in this project**, httpie is installed, with this you can test the different aspects of the api using the terminal 
-just type: 
-```
-$ http REQUEST_TYPE http://ip_address:PORT/url/namespace/ "HEADER: VALUE" PARAMETER:='JSON'
-```
+#### Curl Test
+You can always use `curl` to validate the functionality of your project:
 
 For example, you could send a test `Measurement` using:
 ```
-$ http POST http://localhost:8000/IoT/api/g/measure/ "CA-TOKEN: <your-token>" sensors:='[{"value":14,"id_sensor":1,"measurement_type":"A_HUMIDITY"}]'
+$ curl -H "CA-TOKEN: <your token>; Content-Type: application/json" --request POST --data '{"sensors":[{"value":14,"id_sensor":<your sensor id>,"measurement_type":"A_HUMIDITY"}]}' http://localhost:8000/IoT/api/g/measure/
 ```
+
+This will create a new measurement of the type *"Ambiental Humidity"* with a value of 14 under the sensor with the id you specify.
