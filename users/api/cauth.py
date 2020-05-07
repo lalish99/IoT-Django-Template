@@ -4,6 +4,12 @@ from rest_framework import exceptions
 import hashlib
 
 class CAccessTokenRestAuth(authentication.BaseAuthentication):
+    """
+    Para proyectos mas avanzados implementar capa intermedia
+    Cache, PRIMARY KEY
+    Add invalidate field 
+    Expiration date
+    """
     def authenticate(self, request):
         token = request.META.get('HTTP_CA_TOKEN')
         if token:
