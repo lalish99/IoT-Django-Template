@@ -12,6 +12,8 @@ class CAccessTokenRestAuth(authentication.BaseAuthentication):
     """
     def authenticate(self, request):
         token = request.META.get('HTTP_CA_TOKEN')
+        if not token:
+            token=request.META.get('HTTP_ca_token')
         if token:
             token = token.lower()
         if not token:

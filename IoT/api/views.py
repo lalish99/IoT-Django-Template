@@ -23,7 +23,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
     ============
     """
 
-    @action(detail=False, methods=["get","post"], permission_classes=(permissions.IsAuthenticated,))
+    @action(detail=False, methods=["get","post"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsProjectOwner,))
     def projects(self, request):
         """
         ## Obtain all user's projects
@@ -37,9 +37,15 @@ class IoTProjectsViewSet(viewsets.ViewSet):
             return Response({
                 'status':'Information not available',
             }, status=status.HTTP_400_BAD_REQUEST)
-        projects = request.user.user_iot_projects
+        allowed_projects = []
+        for project in request.user.user_iot_projects:
+            try:
+                self.check_object_permissions(request, project)
+                allowed_projects.append(project)
+            except:
+                pass
         try:
-            serialized_projects = serializers.NestedProjectsSerializer(projects, many=True)
+            serialized_projects = serializers.NestedProjectsSerializer(allowed_projects, many=True)
             return Response({
                 'status':'Information shown',
                 'projects':serialized_projects.data, 
@@ -61,6 +67,9 @@ class IoTProjectsViewSet(viewsets.ViewSet):
 
         #### Allowed methods:
         * #### *GET*: View details of project
+
+        Information of the selected user will be returned within the "project" 
+        argument inside the body
         """
         if not request.user.is_authenticated:
             return Response({
@@ -70,10 +79,10 @@ class IoTProjectsViewSet(viewsets.ViewSet):
         project = get_object_or_404(models.Projects, pk=pk)
         self.check_object_permissions(request, project)
         try:
-            serialized_projects = serializers.NestedProjectsSerializer(project, many=False)
+            serialized_project = serializers.NestedProjectsSerializer(project, many=False)
             return Response({
                 'status':'Information shown',
-                'project_{}'.format(pk):serialized_projects.data, 
+                'project'.format(pk):serialized_project.data, 
             }, status=status.HTTP_200_OK)
         except:
             return Response({
