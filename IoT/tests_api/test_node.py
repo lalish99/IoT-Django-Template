@@ -47,6 +47,7 @@ class NodeManagementTestCase(TestCase):
         zone.access_keys.add(token)
         zone.save()
 
+
     def test_create_edit_delete_node(self):
         """
         Create a node edit it and delete it via the api
@@ -239,3 +240,62 @@ class NodeManagementTestCase(TestCase):
         self.assertEqual(delete_response.status_code, 200) # Sensors deleted
         self.assertEqual(number_sensors, len(models.Sensors.objects.all()))
         user.delete()
+
+
+    def test_unauthorized_node(self):
+        """
+        Test accessing node with bad credentials
+        """
+        # Check needed
+        self.assertNotEqual(self.user, None)
+        # Create and save token
+        token = CustomAccessTokens(
+            user=self.user,
+            name="testToken"
+        )
+        node_token = token.uuid_token
+        token.save()
+        # Create project
+        project = models.Projects.objects.create(
+            user=self.user,
+            name='Test UA',
+            description='Test project',
+            snippet_title='Test Snippet',
+            snippet_image='image.png',
+        )
+        # Create zone
+        zone = models.Zones.objects.create(
+            project=project,
+            name='Test zone UA',
+            description='Test zone for node management',
+        )
+        # Create node
+        node = models.Node.objects.create(
+            zone=zone,
+            name="Test node UA",
+            description="Test node for management"
+        )
+        # Create node url
+        node_url = reverse('iot_api:iot_general_api-node', args=(node.id, ))
+        # Test without header
+        get_nh_response = self.client_api.get(
+            node_url,
+            format='json'
+        )
+        self.assertTrue(
+            get_nh_response.status_code == 403 or 
+            get_nh_response.status_code == 401 or 
+            get_nh_response.status_code == 400
+        )
+        # Test with unauthorized token
+        header = {'HTTP_CA_TOKEN':node_token}
+        get_response = self.client_api.get(
+            node_url,
+            format='json',
+            **header
+        )
+        self.assertTrue(
+            get_nh_response.status_code == 403 or 
+            get_nh_response.status_code == 401 or 
+            get_nh_response.status_code == 400
+        )

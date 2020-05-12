@@ -23,22 +23,21 @@ class IoTProjectsViewSet(viewsets.ViewSet):
     ============
     """
 
-    @action(detail=False, methods=["get","post"], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsProjectOwner,))
+    @action(detail=False, methods=["get",], permission_classes=(permissions.IsAuthenticated,IoTPermissions.IsProjectOwner,))
     def projects(self, request):
         """
-        ## Obtain all user's projects
+        ## Obtain all token's projects
         ====
 
         #### Allowed methods:
-        * #### *GET*: View projects vinculated to user
-        * #### *POST*: Create a project
+        * #### *GET*: View projects vinculated to a token
         """
         if not request.user.is_authenticated:
             return Response({
                 'status':'Information not available',
             }, status=status.HTTP_400_BAD_REQUEST)
         allowed_projects = []
-        for project in request.user.user_iot_projects:
+        for project in request.user.user_iot_projects.all():
             try:
                 self.check_object_permissions(request, project)
                 allowed_projects.append(project)
