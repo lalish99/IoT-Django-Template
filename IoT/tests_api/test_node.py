@@ -69,7 +69,7 @@ class NodeManagementTestCase(TestCase):
                     zone=z,
                     node=node,
                     sensor_type=choices.DHT22,
-                    ambiental=True
+                    ambiental=False
                 )
             )
         return sensors

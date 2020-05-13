@@ -750,7 +750,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
                 return Response({
                     'status':'Information shown',
                     'measurements':s_serializer.data
-                }, status=status.HTTP_200_OK)
+                }, status=status.HTTP_201_CREATED)
             else:
                 return Response({
                     'status':'Error on data',
