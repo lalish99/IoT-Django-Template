@@ -74,3 +74,16 @@ $ git pull
 $ ./manage.py migrate
 ```
 With this you ensure the project works correctly
+
+# Tests:
+In case you start modifying api views or the models you want to ensure they work properly, 
+to aid you in the process of testing Django has a built in testing system, and for this project 
+there are some base tests for the api views which have been added under `IoT.tests_api.*` 
+you can add your tests here or just use the built in test cases.
+
+To test your project simply run the following command:
+```
+$ ./manage.py test
+```
+
+In case you want to create your own tests, please read the django rest api [documentation](https://www.django-rest-framework.org/api-guide/testing/)
