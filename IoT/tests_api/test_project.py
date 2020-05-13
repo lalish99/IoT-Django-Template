@@ -9,18 +9,6 @@ import IoT.model_choices as choices
 class ProjectManagementTestCase(TestCase):
     """
     Test Project management
-    project_1 = {
-        name:"Test",
-        description:"Test project",
-        snippet_title:"Test Snippet",
-        snippet_image:"image.png"
-    }
-    project_2 = {
-        name:"Test2",
-        description:"Test project 2",
-        snippet_title:"Test Snippet 2",
-        snippet_image:"image2.png"
-    }
     """
     client_api = APIClient()
     user = None
@@ -43,6 +31,7 @@ class ProjectManagementTestCase(TestCase):
         self.token = token.uuid_token
         self.token_obj = token
         token.save()
+
 
     def test_projects_access(self):
         """
@@ -79,6 +68,8 @@ class ProjectManagementTestCase(TestCase):
             format='json',
             **header
         )
+        for p in projects:
+            self.assertEqual(p, models.Projects.objects.get(id=p.id))
         self.assertEqual(len(get_response.data['projects']), 2) # Only two projects allowed
         projects[0].delete()
         projects[1].delete()
@@ -90,6 +81,8 @@ class ProjectManagementTestCase(TestCase):
             format='json',
             **header
         )
+        for p in projects:
+            self.assertEqual(p, models.Projects.objects.get(id=p.id))
         self.assertEqual(len(get_response.data['projects']), 0) # Only two projects allowed
         for p in projects:
             p.delete()
@@ -116,6 +109,8 @@ class ProjectManagementTestCase(TestCase):
                     snippet_image='image.png',
                 )
             )
+        # Count all projects
+        count_projects = len(models.Projects.objects.all())
         # Create url
         url_project = reverse('iot_api:iot_general_api-project', args=(projects[0].id,))
         # Ask for information without token header
@@ -123,11 +118,13 @@ class ProjectManagementTestCase(TestCase):
             url_project,
             format='json'
         )
+        self.assertEqual(projects[0], models.Projects.objects.get(id=projects[0].id))
         self.assertTrue(
             get_nh_response.status_code == 403 or 
             get_nh_response.status_code == 401 or 
             get_nh_response.status_code == 400
         )
+        self.assertEqual(count_projects, len(models.Projects.objects.all()))
         # Test with unauthorized token
         header = {'HTTP_CA_TOKEN':self.token}
         get_response = self.client_api.get(
@@ -135,11 +132,13 @@ class ProjectManagementTestCase(TestCase):
             format='json',
             **header
         )
+        self.assertEqual(projects[0], models.Projects.objects.get(id=projects[0].id))
         self.assertTrue(
             get_response.status_code == 403 or 
             get_response.status_code == 401 or 
             get_response.status_code == 400
         )
+        self.assertEqual(count_projects, len(models.Projects.objects.all()))
 
 
     def test_unauthorized_project_zones(self):
@@ -171,6 +170,7 @@ class ProjectManagementTestCase(TestCase):
                 )
             )
         project.project_zones.set(zones)
+        count_project_zones = len(project.project_zones.all())
         # Create project zones url
         url_project_zones = reverse('iot_api:iot_general_api-project-zones', args=(project.id,))
         # Post data
@@ -188,11 +188,13 @@ class ProjectManagementTestCase(TestCase):
             zone_data,
             format="json"
         )
+        self.assertEqual(project.project_zones, models.Projects.objects.get(id=project.id).project_zones)
         self.assertTrue(
             post_nh_response.status_code == 403 or 
             post_nh_response.status_code == 401 or 
             post_nh_response.status_code == 400
         )
+        self.assertEqual(len(project.project_zones.all()), count_project_zones)
         # Create wrong token
         header = {'HTTP_CA_TOKEN':self.token}
         # Create no token
@@ -202,11 +204,13 @@ class ProjectManagementTestCase(TestCase):
             format="json",
             **header
         )
+        self.assertEqual(project.project_zones, models.Projects.objects.get(id=project.id).project_zones)
         self.assertTrue(
             post_response.status_code == 403 or 
             post_response.status_code == 401 or 
             post_response.status_code == 400
         )
+        self.assertEqual(len(project.project_zones.all()), count_project_zones)
         # Attempt deletion of other project zones
         zones_to_delete = {
             "zones":[{"id_zone":z.id} for z in zones]
@@ -217,11 +221,13 @@ class ProjectManagementTestCase(TestCase):
             zone_data,
             format="json"
         )
+        self.assertEqual(project.project_zones, models.Projects.objects.get(id=project.id).project_zones)
         self.assertTrue(
             delete_nh_response.status_code == 403 or 
             delete_nh_response.status_code == 401 or 
             delete_nh_response.status_code == 400
         )
+        self.assertEqual(len(project.project_zones.all()), count_project_zones)
         # Wrong token
         delete_response = self.client_api.delete(
             url_project_zones,
@@ -229,16 +235,19 @@ class ProjectManagementTestCase(TestCase):
             format="json",
             **header
         )
+        self.assertEqual(project.project_zones, models.Projects.objects.get(id=project.id).project_zones)
         self.assertTrue(
             delete_response.status_code == 403 or 
             delete_response.status_code == 401 or 
             delete_response.status_code == 400
         )
+        self.assertEqual(len(project.project_zones.all()), count_project_zones)
         # Attempt to get information no header
         get_nh_response = self.client_api.get(
             url_project_zones,
             format="json"
         )
+        self.assertEqual(project.project_zones, models.Projects.objects.get(id=project.id).project_zones)
         self.assertTrue(
             get_nh_response.status_code == 403 or 
             get_nh_response.status_code == 401 or 
@@ -250,6 +259,7 @@ class ProjectManagementTestCase(TestCase):
             format="json",
             **header
         )
+        self.assertEqual(project.project_zones, models.Projects.objects.get(id=project.id).project_zones)
         self.assertTrue(
             get_response.status_code == 403 or 
             get_response.status_code == 401 or 

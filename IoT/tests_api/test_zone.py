@@ -440,6 +440,8 @@ class ZoneManagementTestCase(TestCase):
         self.assertNotEqual(self.project_token, None)
         # Create zone
         zone = self.CreateZone()
+        # Count total zones
+        count_zones = len(models.Zones.objects.all())
         # Create zone url
         zone_url = reverse('iot_api:iot_general_api-zone', args=(zone.id,))
         # Create wrong token
@@ -449,22 +451,26 @@ class ZoneManagementTestCase(TestCase):
             zone_url,
             format="json"
         )
+        self.assertEqual(zone, models.Zones.objects.get(id=zone.id))
         self.assertTrue(
             get_nh_response.status_code == 403 or 
             get_nh_response.status_code == 401 or 
             get_nh_response.status_code == 400
         )
+        self.assertEqual(count_zones, len(models.Zones.objects.all()))
         # Test get wrong token
         get_response = self.client_api.get(
             zone_url,
             format="json",
             **header
         )
+        self.assertEqual(zone, models.Zones.objects.get(id=zone.id))
         self.assertTrue(
             get_response.status_code == 403 or 
             get_response.status_code == 401 or 
             get_response.status_code == 400
         )
+        self.assertEqual(count_zones, len(models.Zones.objects.all()))
         # Test put no header
         zone_put_data = {
             "zone":{
@@ -477,11 +483,13 @@ class ZoneManagementTestCase(TestCase):
             zone_put_data,
             format="json",
         )
+        self.assertEqual(zone, models.Zones.objects.get(id=zone.id))
         self.assertTrue(
             put_nh_response.status_code == 403 or 
             put_nh_response.status_code == 401 or 
             put_nh_response.status_code == 400
         )
+        self.assertEqual(count_zones, len(models.Zones.objects.all()))
         # Test put wrong header
         put_response = self.client_api.put(
             zone_url,
@@ -489,32 +497,38 @@ class ZoneManagementTestCase(TestCase):
             format="json",
             **header
         )
+        self.assertEqual(zone, models.Zones.objects.get(id=zone.id))
         self.assertTrue(
             put_response.status_code == 403 or 
             put_response.status_code == 401 or 
             put_response.status_code == 400
         )
+        self.assertEqual(count_zones, len(models.Zones.objects.all()))
         # Test delete no header
         delete_nh_response = self.client_api.delete(
             zone_url,
             format="json",
         )
+        self.assertEqual(zone, models.Zones.objects.get(id=zone.id))
         self.assertTrue(
             delete_nh_response.status_code == 403 or 
             delete_nh_response.status_code == 401 or 
             delete_nh_response.status_code == 400
         )
+        self.assertEqual(count_zones, len(models.Zones.objects.all()))
         # Test delete wrong header
         delete_response = self.client_api.delete(
             zone_url,
             format="json",
             **header
         )
+        self.assertEqual(zone, models.Zones.objects.get(id=zone.id))
         self.assertTrue(
             delete_response.status_code == 403 or 
             delete_response.status_code == 401 or 
             delete_response.status_code == 400
         )
+        self.assertEqual(count_zones, len(models.Zones.objects.all()))
 
 
     def test_unauthorized_zone_nodes(self):
@@ -525,6 +539,8 @@ class ZoneManagementTestCase(TestCase):
         # Create zone
         zone = self.CreateZone()
         nodes = self.CreateNodes(zone,2)
+        # Count nodes
+        node_count = len(models.Node.objects.all())
         # Create node zones url
         url_zone_nodes = reverse('iot_api:iot_general_api-zone-nodes', args=(zone.id,))
         # Create header
@@ -534,24 +550,27 @@ class ZoneManagementTestCase(TestCase):
             url_zone_nodes,
             format="json"
         )
+        self.assertEqual(zone.zone_nodes, models.Zones.objects.get(id=zone.id).zone_nodes)
         self.assertTrue(
             get_nh_response.status_code == 403 or 
             get_nh_response.status_code == 401 or 
             get_nh_response.status_code == 400
         )
+        self.assertEqual(len(models.Node.objects.all()), node_count)
         # Attempt to get wrong token
         get_response = self.client_api.get(
             url_zone_nodes,
             format="json",
             **header
         )
+        self.assertEqual(zone.zone_nodes, models.Zones.objects.get(id=zone.id).zone_nodes)
         self.assertTrue(
             get_response.status_code == 403 or 
             get_response.status_code == 401 or 
             get_response.status_code == 400
         )
+        self.assertEqual(len(models.Node.objects.all()), node_count)
         # Attempt to create nodes
-        node_count = len(models.Node.objects.all())
         node_data = {
             'nodes':[
                 {
@@ -566,6 +585,7 @@ class ZoneManagementTestCase(TestCase):
             node_data,
             format="json"
         )
+        self.assertEqual(zone.zone_nodes, models.Zones.objects.get(id=zone.id).zone_nodes)
         self.assertTrue(
             post_nh_response.status_code == 403 or 
             post_nh_response.status_code == 401 or 
@@ -579,6 +599,7 @@ class ZoneManagementTestCase(TestCase):
             format="json",
             **header
         )
+        self.assertEqual(zone.zone_nodes, models.Zones.objects.get(id=zone.id).zone_nodes)
         self.assertTrue(
             post_response.status_code == 403 or 
             post_response.status_code == 401 or 
@@ -597,6 +618,7 @@ class ZoneManagementTestCase(TestCase):
             node_delete_list,
             format="json"
         )
+        self.assertEqual(zone.zone_nodes, models.Zones.objects.get(id=zone.id).zone_nodes)
         self.assertTrue(
             delete_nh_response.status_code == 403 or 
             delete_nh_response.status_code == 401 or 
@@ -610,6 +632,7 @@ class ZoneManagementTestCase(TestCase):
             format="json",
             **header
         )
+        self.assertEqual(zone.zone_nodes, models.Zones.objects.get(id=zone.id).zone_nodes)
         self.assertTrue(
             delete_response.status_code == 403 or 
             delete_response.status_code == 401 or 
@@ -626,6 +649,8 @@ class ZoneManagementTestCase(TestCase):
         # Create zone
         zone = self.CreateZone()
         sensors = self.CreateSensors(zone,2)
+        # Count sensors
+        sensor_count = len(models.Sensors.objects.all())
         # Create node zones url
         url_zone_sensors = reverse('iot_api:iot_general_api-zone-sensors', args=(zone.id,))
         # Create header
@@ -635,24 +660,27 @@ class ZoneManagementTestCase(TestCase):
             url_zone_sensors,
             format="json"
         )
+        self.assertEqual(zone.zone_ambiental_sensors, models.Zones.objects.get(id=zone.id).zone_ambiental_sensors)
         self.assertTrue(
             get_nh_response.status_code == 403 or 
             get_nh_response.status_code == 401 or 
             get_nh_response.status_code == 400
         )
+        self.assertEqual(len(models.Sensors.objects.all()), sensor_count)
         # Attempt to get wrong token
         get_response = self.client_api.get(
             url_zone_sensors,
             format="json",
             **header
         )
+        self.assertEqual(zone.zone_ambiental_sensors, models.Zones.objects.get(id=zone.id).zone_ambiental_sensors)
         self.assertTrue(
             get_response.status_code == 403 or 
             get_response.status_code == 401 or 
             get_response.status_code == 400
         )
+        self.assertEqual(len(models.Sensors.objects.all()), sensor_count)
         # Attempt to create nodes
-        sensor_count = len(models.Sensors.objects.all())
         sensor_data = {
             'sensors':[
                 {
@@ -672,6 +700,7 @@ class ZoneManagementTestCase(TestCase):
             sensor_data,
             format="json"
         )
+        self.assertEqual(zone.zone_ambiental_sensors, models.Zones.objects.get(id=zone.id).zone_ambiental_sensors)
         self.assertTrue(
             post_nh_response.status_code == 403 or 
             post_nh_response.status_code == 401 or 
@@ -685,6 +714,7 @@ class ZoneManagementTestCase(TestCase):
             format="json",
             **header
         )
+        self.assertEqual(zone.zone_ambiental_sensors, models.Zones.objects.get(id=zone.id).zone_ambiental_sensors)
         self.assertTrue(
             post_response.status_code == 403 or 
             post_response.status_code == 401 or 
@@ -703,6 +733,7 @@ class ZoneManagementTestCase(TestCase):
             delete_list,
             format="json"
         )
+        self.assertEqual(zone.zone_ambiental_sensors, models.Zones.objects.get(id=zone.id).zone_ambiental_sensors)
         self.assertTrue(
             delete_nh_response.status_code == 403 or 
             delete_nh_response.status_code == 401 or 
@@ -716,6 +747,7 @@ class ZoneManagementTestCase(TestCase):
             format="json",
             **header
         )
+        self.assertEqual(zone.zone_ambiental_sensors, models.Zones.objects.get(id=zone.id).zone_ambiental_sensors)
         self.assertTrue(
             delete_response.status_code == 403 or 
             delete_response.status_code == 401 or 
