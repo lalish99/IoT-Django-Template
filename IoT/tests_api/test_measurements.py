@@ -130,7 +130,7 @@ class MeasurementManagemenetTestCase(TestCase):
                 **header
             )
             self.assertEqual(get_response.status_code, 200) # Gotten correctly
-            self.assertEqual(ms, get_response.data['sensor']['measurements'])
+            self.assertEqual(ms, get_response.data['measurements'])
 
         self.assertEqual(m_count+(len(sensors*nmp_sensor)), len(models.Measurement.objects.all()))
 
@@ -181,7 +181,7 @@ class MeasurementManagemenetTestCase(TestCase):
                 **header
             )
             self.assertEqual(get_response.status_code, 200) # Gotten correctly
-            self.assertEqual(ms, get_response.data['sensor']['measurements'])
+            self.assertEqual(ms, get_response.data['measurements'])
 
         self.assertEqual(m_count+(len(sensors*nmp_sensor)), len(models.Measurement.objects.all()))
 

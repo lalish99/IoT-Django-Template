@@ -583,7 +583,7 @@ class IoTProjectsViewSet(viewsets.ViewSet):
                 self.check_object_permissions(request, filtered_node)
                 filtered_node.delete()
                 return Response({
-                    'status':'Zone deletion successful'
+                    'status':'Node deletion successful'
                 }, status=status.HTTP_200_OK)
 
             elif request.method == 'GET':
@@ -726,9 +726,75 @@ class IoTProjectsViewSet(viewsets.ViewSet):
     Sensors
     ============
     """
-    # WIP
+    @action(detail=True, methods=["get", "delete"], permission_classes=(permissions.IsAuthenticated, IoTPermissions.CanManageSensor, ))
+    def sensor(self, request, pk=None):
+        """
+        Manage sensor individually
+        ======
 
-    
+        A sensor can be, read and deleted
+
+        #### Allowed methods:
+        * #### *GET*: View sensor information
+        * #### *DELETE*: Delete the sensor
+
+        *If you have have control over the current sensor by using the DELETE 
+        method you automatically delete it **BE CAREFUL** !*
+        """
+        if not request.user.is_authenticated:
+            return Response({
+                'status':'Information not available',
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        ex = 'Unknown'
+        msg = ''
+        try:
+            if request.method == "GET":
+                sensor = get_object_or_404(models.Sensors,pk=pk)
+                self.check_object_permissions(request, sensor)
+                ser = serializers.SensorsSerializer(sensor, many=False)
+                return Response({
+                    'status':'Sensor found',
+                    'sensor':ser.data,
+                }, status=status.HTTP_200_OK)
+            
+            if request.method == "DELETE":
+                sensor = get_object_or_404(models.Sensors,pk=pk)
+                self.check_object_permissions(request, sensor)
+                sensor.delete()
+                return Response({
+                    'status':'Sensor deleted succesfully'
+                }, status=status.HTTP_200_OK)
+        
+        except KeyError as e:
+            ex = 'KeyError'
+            msg = 'If your request is POST or DELETE verify you are sending the sensors you want to either create or delete'
+        except Exception as e:
+            ex = str(e)
+            msg = ''
+        return Response({
+            'status':'Something went wrong',
+            'exception':ex,
+            'message':msg
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+    @action(detail=True, methods=["get",], permission_classes=(permissions.IsAuthenticated,IoTPermissions.CanManageSensor,))
+    def sensor_measurements(self, request, pk=None):
+        try:
+            sensor = get_object_or_404(models.Sensors,pk=pk)
+            self.check_object_permissions(request, sensor)
+            ser = serializers.MeasurementSerializer(sensor.sensor_measurements, many=True)
+            return Response({
+                'status':'Sensor found',
+                'measurements':ser.data,
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'status':'No sensor matching id {}'.format(pk),
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
     """
     ============
     Measurements
@@ -768,19 +834,3 @@ class IoTProjectsViewSet(viewsets.ViewSet):
             'exception':ex,
             'message':msg
         }, status=status.HTTP_400_BAD_REQUEST)
-
-
-    @action(detail=True, methods=["get",], permission_classes=(permissions.IsAuthenticated,IoTPermissions.CanManageSensor,))
-    def sensor_measurements(self, request, pk=None):
-        try:
-            sensor = get_object_or_404(models.Sensors,pk=pk)
-            self.check_object_permissions(request, sensor)
-            ser = serializers.NestedSensorSerializer(sensor, many=False)
-            return Response({
-                'status':'Sensor found',
-                'sensor':ser.data,
-            }, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({
-                'status':'No sensor matching id {}'.format(pk),
-            }, status=status.HTTP_400_BAD_REQUEST)
