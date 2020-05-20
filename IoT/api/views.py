@@ -781,10 +781,24 @@ class IoTProjectsViewSet(viewsets.ViewSet):
 
     @action(detail=True, methods=["get",], permission_classes=(permissions.IsAuthenticated,IoTPermissions.CanManageSensor,))
     def sensor_measurements(self, request, pk=None):
+        """
+        Get all sensor measurements
+        =====
+
+        Measurements can filtered based on date, to do so send the "date" parameter within the get request
+        """
         try:
             sensor = get_object_or_404(models.Sensors,pk=pk)
             self.check_object_permissions(request, sensor)
-            ser = serializers.MeasurementSerializer(sensor.sensor_measurements, many=True)
+            measurements = sensor.sensor_measurements
+            if "y" in request.query_params:
+                measurements = measurements.filter(created_at__year=request.query_params['y'])
+                if "m" in request.query_params:
+                    measurements = measurements.filter(created_at__month=request.query_params['m'])
+                    if "d" in request.query_params:
+                        measurements = measurements.filter(created_at__day=request.query_params['d'])
+                    
+            ser = serializers.MeasurementSerializer(measurements, many=True)
             return Response({
                 'status':'Sensor found',
                 'measurements':ser.data,

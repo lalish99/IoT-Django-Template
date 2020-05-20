@@ -1,10 +1,13 @@
 from django.test import TestCase
+from django.utils import timezone
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 from users.models import GeneralUser, CustomAccessTokens
 from IoT.api.views import IoTProjectsViewSet
 import IoT.models as models
 import IoT.model_choices as choices
+import datetime
+import pytz
 
 class SensorManagementTestCase(TestCase):
     """
@@ -125,6 +128,84 @@ class SensorManagementTestCase(TestCase):
         self.assertEqual(i_sensor_count, len(models.Sensors.objects.all()))
 
 
+    def test_get_filtered_measurements(self):
+        """
+        Get filtered measurements by date    
+        """
+        self.assertNotEqual(self.zone_token, None)
+        self.assertNotEqual(self.zone, None)
+        self.assertNotEqual(self.node_token, None)
+        self.assertNotEqual(self.node, None)
+        # Create sensors
+        sensors = self.CreateSensors(n=1)
+        # Create header
+        header = {'HTTP_CA_TOKEN':self.zone_token}
+        # Count measurements
+        m_count = len(models.Measurement.objects.all())
+        # Number of measurements per sensor
+        nmp_sensor = 3
+        # Test creating measurements for every sensor in sensors
+        for sensor in sensors:
+            # Create url
+            sensor_url = reverse('iot_api:iot_general_api-measure')
+            # Measurements
+            m = {
+                'sensors':[{
+                    'value':30 + (x**2),
+                    'id_sensor':sensor.id,
+                    'measurement_type':choices.A_TEMPERATURE
+                } for x in range(nmp_sensor)]
+            }
+            # Create measurements
+            post_response = self.client_api.post(
+                sensor_url,
+                m,
+                format="json",
+                **header
+            )
+            self.assertEqual(post_response.status_code, 201) # Measurements created
+            today = timezone.now()
+            y = today.year
+            m = today.month
+            d = today.day
+            get_parameters = {
+                "y":y,
+                "m":m,
+                "d":d
+            }
+            # Create url
+            url_sensor_measurements = reverse('iot_api:iot_general_api-sensor-measurements', args=(sensor.id,))
+            # Attemt to get filtered measurements current date
+            get_response = self.client_api.get(
+                url_sensor_measurements,
+                get_parameters,
+                format="json",
+                **header
+            )
+            self.assertEqual(get_response.status_code, 200)
+            for mesasurement in get_response.data["measurements"]:
+                str_date = mesasurement["created_at"].split("T")[0]
+                m_date = datetime.datetime.strptime(str_date,"%Y-%m-%d")
+                self.assertEqual(y, m_date.year)
+                self.assertEqual(m, m_date.month)
+                self.assertEqual(d, m_date.day)
+            # Attemt to get filtered measurements wrong date
+            get_w_parameters = {
+                "y":y,
+                "m":m+1 if m+1 <= 12 else m-1,
+                "d":d
+            }
+            get_w_response = self.client_api.get(
+                url_sensor_measurements,
+                get_w_parameters,
+                format="json",
+                **header
+            )
+            self.assertEqual(get_w_response.status_code, 200)
+            self.assertEqual(get_w_response.data["measurements"], [])
+
+
+
     def test_unauthorized_sensor(self):
         """
         Test unauthorized attempts to acces sensor info
@@ -190,4 +271,3 @@ class SensorManagementTestCase(TestCase):
 
         self.assertEqual(sensor_count, len(models.Sensors.objects.all()))
 
-        
