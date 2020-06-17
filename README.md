@@ -87,3 +87,9 @@ $ ./manage.py test
 ```
 
 In case you want to create your own tests, please read the django rest api [documentation](https://www.django-rest-framework.org/api-guide/testing/)
+
+# Todo:
+* Separate all actions into ModelViewSets
+* Transform ViewSets to use nested routes
+
+
