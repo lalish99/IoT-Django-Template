@@ -32,7 +32,7 @@ future==0.16.0
 idna==2.7
 importlib-metadata==1.6.0
 isort==4.3.21
-Jinja2==2.11.2
+Jinja2==2.11.3
 jmespath==0.9.4
 jsonschema==2.6.0
 keyring==9.0
